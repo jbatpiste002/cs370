@@ -1,5 +1,9 @@
 .settings
 .gradle
+.project
+.classpath
+bin
 build
+war
 src/main/webapp/WEB-INF/lib/*
 vendor
