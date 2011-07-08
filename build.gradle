@@ -27,7 +27,7 @@ gae {
     downloadSdk = true
 
     appcfg {
-        email = 'your.name@gmail.com'
+        email = 'jbatpiste@gmail.com'
         passIn = true
 
         logs {
