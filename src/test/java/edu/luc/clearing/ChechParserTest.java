@@ -1,0 +1,14 @@
+package edu.luc.clearing;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+public class ChechParserTest {
+
+	@Test
+	public void test() {
+		//fail("Not yet implemented");
+	}
+
+}
