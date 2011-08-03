@@ -1,0 +1,1179 @@
+From 7042420150a9210e6504e0698c30809d0d4f83ea Mon Sep 17 00:00:00 2001
+From: jbatpiste002 <jbatpiste002@githhub.com>
+Date: Wed, 3 Aug 2011 08:34:21 +0700
+Subject: [PATCH] new source
+
+---
+ newsource/Main/CheckParser.java           |  186 +++++++++++++++++++++++++++++
+ newsource/Main/Clock.java                 |    7 +
+ newsource/Main/DataStoreAdapter.java      |   43 +++++++
+ newsource/Main/RequestReader.java         |   50 ++++++++
+ newsource/Main/SystemClock.java           |   11 ++
+ newsource/Main/checkClearingServelet.java |   34 +++++
+ newsource/Main/checkHistory.java          |   33 +++++
+ newsource/Other/._Build.gradle.java       |  Bin 0 -> 4096 bytes
+ newsource/Other/._deploy.sh               |  Bin 0 -> 4096 bytes
+ newsource/Other/._deploy.shh.java         |  Bin 0 -> 4096 bytes
+ newsource/Other/._system_test.java        |  Bin 0 -> 4096 bytes
+ newsource/Other/._system_test.jsh.java    |  Bin 0 -> 4096 bytes
+ newsource/Other/AcceptanceTest.java       |  137 +++++++++++++++++++++
+ newsource/Other/deploy.sh                 |   88 ++++++++++++++
+ newsource/Other/deploy.shh.java           |   19 +++
+ newsource/Other/system 1                  |   20 +++
+ newsource/Other/system_test               |   20 +++
+ newsource/Other/system_test.java          |   20 +++
+ newsource/Other/system_test.jsh.java      |   16 +++
+ newsource/Test/CheckClearingServletTest   |   68 +++++++++++
+ newsource/Test/CheckHistoryTest.java      |   58 +++++++++
+ newsource/Test/CheckParserTest.java       |   34 +++++
+ newsource/Test/DataStoreAdapterTest.java  |   20 +++
+ newsource/Test/RequestReaderTest.java     |   69 +++++++++++
+ 24 files changed, 933 insertions(+), 0 deletions(-)
+ create mode 100755 newsource/Main/CheckParser.java
+ create mode 100755 newsource/Main/Clock.java
+ create mode 100755 newsource/Main/DataStoreAdapter.java
+ create mode 100755 newsource/Main/RequestReader.java
+ create mode 100755 newsource/Main/SystemClock.java
+ create mode 100755 newsource/Main/checkClearingServelet.java
+ create mode 100755 newsource/Main/checkHistory.java
+ create mode 100755 newsource/Other/._Build.gradle.java
+ create mode 100755 newsource/Other/._deploy.sh
+ create mode 100755 newsource/Other/._deploy.shh.java
+ create mode 100755 newsource/Other/._system_test.java
+ create mode 100755 newsource/Other/._system_test.jsh.java
+ create mode 100755 newsource/Other/AcceptanceTest.java
+ create mode 100755 newsource/Other/deploy.sh
+ create mode 100755 newsource/Other/deploy.shh.java
+ create mode 100755 newsource/Other/system 1
+ create mode 100755 newsource/Other/system_test
+ create mode 100755 newsource/Other/system_test.java
+ create mode 100755 newsource/Other/system_test.jsh.java
+ create mode 100755 newsource/Test/CheckClearingServletTest
+ create mode 100755 newsource/Test/CheckHistoryTest.java
+ create mode 100755 newsource/Test/CheckParserTest.java
+ create mode 100755 newsource/Test/DataStoreAdapterTest.java
+ create mode 100755 newsource/Test/RequestReaderTest.java
+
+diff --git a/newsource/Main/CheckParser.java b/newsource/Main/CheckParser.java
+new file mode 100755
+index 0000000..b76cd5d
+--- /dev/null
++++ b/newsource/Main/CheckParser.java
+@@ -0,0 +1,186 @@
++package edu.luc.clearing;
++
++import java.util.HashMap;
++import java.util.Map;
++import java.util.ArrayList;
++
++public class CheckParser {
++
++Map<String, Integer> AMOUNTS;
++
++public CheckParser() {
++AMOUNTS = new HashMap<String, Integer>();
++AMOUNTS.put("no", 0);
++AMOUNTS.put("cent", 1);
++AMOUNTS.put("dollar", 100);
++AMOUNTS.put("zero", 0);
++AMOUNTS.put("one", 1);
++AMOUNTS.put("two", 2);
++AMOUNTS.put("three", 3);
++AMOUNTS.put("four", 4);
++AMOUNTS.put("five", 5);
++AMOUNTS.put("six", 6);
++AMOUNTS.put("seven", 7);
++AMOUNTS.put("eight", 8);
++AMOUNTS.put("nine", 9);
++AMOUNTS.put("ten", 10);
++AMOUNTS.put("eleven", 11);
++AMOUNTS.put("twelve", 12);
++AMOUNTS.put("thirteen", 13);
++AMOUNTS.put("fourteen", 14);
++AMOUNTS.put("fifteen", 15);
++AMOUNTS.put("sixteen", 16);
++AMOUNTS.put("seventeen", 17);
++AMOUNTS.put("eighteen", 18);
++AMOUNTS.put("nineteen", 19);
++AMOUNTS.put("twenty", 20);
++AMOUNTS.put("thirty", 30);
++AMOUNTS.put("forty", 40);
++AMOUNTS.put("fifty", 50);
++AMOUNTS.put("sixty", 60);
++AMOUNTS.put("seventy", 70);
++AMOUNTS.put("eighty", 80);
++AMOUNTS.put("ninety", 90);
++AMOUNTS.put("hundred", 100);
++AMOUNTS.put("thousand", 1000);
++}
++
++public Integer processCheckString(String input) {
++
++ArrayList<Integer> dollars = null;
++ArrayList<Integer> cents = null;
++String[] result = processString(input);
++String dollarString = result[0];
++String centString = result[1];
++Integer dollarTotal = null;
++Integer centTotal = null;
++Integer total = null;
++
++if (dollarString == null && centString == null)
++return total;
++else if (dollarString != null && centString == null) {
++dollars = stringArrToIntegerArr(dollarString.split(" "));
++total = parseAmount(dollars);
++if (total != null)
++total *= 100;
++return total;
++}
++else if (dollarString == null && centString != null) {
++cents = stringArrToIntegerArr(centString.split(" "));
++total = parseAmount(cents);
++return total;
++}
++else {
++dollars = stringArrToIntegerArr(dollarString.split(" "));
++dollarTotal = parseAmount(dollars);
++cents = stringArrToIntegerArr(centString.split(" "));
++centTotal = parseAmount(cents);
++if (dollarTotal != null) {
++dollarTotal *= 100;
++if (centTotal != null)
++total = dollarTotal + centTotal;
++}
++return total;
++}
++}
++
++public boolean isNumeric(String word) {
++if (word != null)
++return java.util.regex.Pattern.matches("\\d+", word);
++else return false;
++}
++
++public ArrayList<Integer> stringArrToIntegerArr(String[] stringArr) {
++ArrayList<Integer> integerList = new ArrayList<Integer>();
++for (String word : stringArr) {
++if (isNumeric(word))
++integerList.add(Integer.valueOf(word));
++else
++integerList.add(AMOUNTS.get(word));
++}
++return integerList;
++}
++
++public Integer parseAmount(ArrayList<Integer> numArr) {
++if (numArr.contains(null)) return null;
++Integer total = numArr.get(0);
++for (int i = 1; i < numArr.size(); i++) {
++if (numArr.get(i) < numArr.get(i - 1))
++total += numArr.get(i);
++else total *= numArr.get(i);
++}
++return total;
++}
++
++public String[] processString(String input) {
++String[] inputArr;
++String dollarSide = null;
++String centSide = null;
++input = input.toLowerCase();
++
++//replace "+ / & / ~ / -- / ---" with "and"
++if (input.contains(" + "))
++input = input.replace(" + ", " and ");
++else if (input.contains(" & "))
++input = input.replace(" & ", " and ");
++else if (input.contains(" ~ "))
++input = input.replace(" ~ ", " and ");
++else if (input.contains(" -- "))
++input = input.replace(" -- ", " and ");
++else if (input.contains(" --- "))
++input = input.replace(" --- ", " and ");
++else if (input.contains(" , "))
++input = input.replace(" , ", " and ");
++else if (input.contains(", "))
++input = input.replace(", ", " and ");
++
++//remove hyphens
++input = input.replace('-', ' ');
++
++//remove "$" sign
++if (input.contains("$"))
++input = input.replace("$", "");
++
++if (!(input.contains("dollars") || input.contains("dollar") || input.contains("and")
++|| input.contains("cent") || input.contains("cents") || input.contains("/100"))) {
++dollarSide = input;
++String[] result = {dollarSide, centSide};
++return result;
++}
++
++//create normal form of [dollars] and [cents]
++if (input.contains("dollars") && input.contains("and"))
++input = input.replace(" dollars ", " ");
++else if (input.contains("dollar") && input.contains("and"))
++input = input.replace(" dollar ", " ");
++else if (input.contains("dollars") && !input.contains("and"))
++input = input.replace("dollars", "and");
++else if (input.contains("dollar") && !input.contains("and"))
++input = input.replace("dollar", "and");
++
++//split into dollar and cent components
++if (input.contains(" and ")) {
++inputArr = input.split(" and ");
++dollarSide = inputArr[0];
++centSide = inputArr[1];
++}
++else if (input.contains(" and")) {
++inputArr = input.split(" and");
++dollarSide = inputArr[0];
++centSide = "0";
++}
++else if (!input.contains("and"))
++centSide = input;
++
++//remove the word cents from cent side
++if (centSide.contains(" cents"))
++centSide = centSide.replace(" cents", "");
++if (centSide.contains(" cent"))
++centSide = centSide.replace(" cent", "");
++if (centSide.contains("/100"))
++centSide = centSide.replace("/100", "");
++
++String[] result = {dollarSide, centSide};
++return result;
++}
++}
+diff --git a/newsource/Main/Clock.java b/newsource/Main/Clock.java
+new file mode 100755
+index 0000000..33c8355
+--- /dev/null
++++ b/newsource/Main/Clock.java
+@@ -0,0 +1,7 @@
++package edu.luc.clearing;
++
++public interface Clock {
++long currentTime();
++}
++
++
+diff --git a/newsource/Main/DataStoreAdapter.java b/newsource/Main/DataStoreAdapter.java
+new file mode 100755
+index 0000000..c43a22b
+--- /dev/null
++++ b/newsource/Main/DataStoreAdapter.java
+@@ -0,0 +1,43 @@
++package edu.luc.clearing;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Map;
++
++import com.google.appengine.api.datastore.DatastoreService;
++import com.google.appengine.api.datastore.DatastoreServiceFactory;
++import com.google.appengine.api.datastore.Entity;
++import com.google.appengine.api.datastore.PreparedQuery;
++import com.google.appengine.api.datastore.Query;
++
++public class DataStoreAdapter {
++
++private DatastoreService datastore;
++
++public DataStoreAdapter() {
++this(DatastoreServiceFactory.getDatastoreService());
++}
++
++public DataStoreAdapter(DatastoreService datastore) {
++this.datastore = datastore;
++}
++
++public List<Map<String, Object>> runQuery(String column) {
++ArrayList<Map<String,Object>> properties = new ArrayList<Map<String,Object>>();
++Query query = new Query(column);
++PreparedQuery preparedQuery = datastore.prepare(query);
++for (Entity e : preparedQuery.asIterable()) {
++properties.add(e.getProperties());
++}
++return properties;
++}
++
++public void saveRow(String column, String value) {
++Entity entity = new Entity("Checks");
++entity.setProperty(column, value);
++datastore.put(entity);
++}
++
++}
++
++
+diff --git a/newsource/Main/RequestReader.java b/newsource/Main/RequestReader.java
+new file mode 100755
+index 0000000..9ec294c
+--- /dev/null
++++ b/newsource/Main/RequestReader.java
+@@ -0,0 +1,50 @@
++package edu.luc.clearing;
++
++import java.io.Reader;
++import java.lang.reflect.Type;
++import java.util.HashMap;
++import java.util.List;
++
++import com.google.gson.Gson;
++import com.google.gson.reflect.TypeToken;
++
++public class RequestReader {
++
++private static final long TWENTY_FIVE_SECONDS = 25 * 1000;
++private CheckParser checkParser;
++private DataStoreAdapter dataStore;
++private Clock clock;
++
++public RequestReader(DataStoreAdapter dataStore, Clock clock) {
++this.dataStore = dataStore;
++this.clock = clock;
++checkParser = new CheckParser();
++}
++
++public String respond(Reader requestData) {
++Gson gson = new Gson();
++HashMap<String, Integer> map = new HashMap<String, Integer>();
++long startTime = clock.currentTime();
++List<String> checks = gson.fromJson(requestData, requestType()); //look into getting the gson library to return one at a time rather than the entire list
++for(String amount : checks) {
++Integer parsedValue = checkParser.processCheckString(amount);
++if (parsedValue == null) {
++System.err.println("Could not parse amount : " + amount);
++}
++map.put(amount, parsedValue);
++dataStore.saveRow("amount", amount);
++if (timeSince(startTime) > TWENTY_FIVE_SECONDS) {
++return gson.toJson(map);
++}
++}
++return gson.toJson(map);
++}
++
++private long timeSince (long startTime) { //method!!
++return clock.currentTime() - startTime;
++}
++
++private Type requestType() {
++return new TypeToken<List<String>>(){}.getType();
++}
++}
+diff --git a/newsource/Main/SystemClock.java b/newsource/Main/SystemClock.java
+new file mode 100755
+index 0000000..2f730ee
+--- /dev/null
++++ b/newsource/Main/SystemClock.java
+@@ -0,0 +1,11 @@
++package edu.luc.clearing;
++
++public class SystemClock implements Clock {
++
++public long currentTime() {
++return System.currentTimeMillis();
++}
++
++}
++
++
+diff --git a/newsource/Main/checkClearingServelet.java b/newsource/Main/checkClearingServelet.java
+new file mode 100755
+index 0000000..517efb1
+--- /dev/null
++++ b/newsource/Main/checkClearingServelet.java
+@@ -0,0 +1,34 @@
++package edu.luc.clearing;
++import java.io.IOException;
++
++import javax.servlet.ServletException;
++import javax.servlet.http.HttpServlet;
++import javax.servlet.http.HttpServletRequest;
++import javax.servlet.http.HttpServletResponse;
++
++@SuppressWarnings("serial")
++public class CheckClearingServlet extends HttpServlet {
++
++private RequestReader requestReader;
++private CheckHistory checkHistory;
++
++CheckClearingServlet(DataStoreAdapter dataStore) {
++requestReader = new RequestReader(dataStore, new SystemClock());
++checkHistory = new CheckHistory(dataStore);
++}
++
++public CheckClearingServlet() {
++this(new DataStoreAdapter());
++}
++
++    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
++        resp.setContentType("application/json");
++        resp.getWriter().print(requestReader.respond(req.getReader()));
++    }
++
++    @Override
++    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
++     throws ServletException, IOException {
++     resp.getWriter().print(checkHistory.getAmounts(req.getParameter("limit")));
++    }
++}
+diff --git a/newsource/Main/checkHistory.java b/newsource/Main/checkHistory.java
+new file mode 100755
+index 0000000..050b5d4
+--- /dev/null
++++ b/newsource/Main/checkHistory.java
+@@ -0,0 +1,33 @@
++package edu.luc.clearing;
++
++import java.util.HashSet;
++import java.util.List;
++import java.util.Map;
++import java.util.Set;
++
++import com.google.gson.Gson;
++
++public class CheckHistory {
++
++private DataStoreAdapter storeAdapter;
++private Gson gson;
++
++public CheckHistory(DataStoreAdapter storeAdapter) {
++this.storeAdapter = storeAdapter;
++gson = new Gson();
++}
++
++public String getAmounts(String limitStr) {
++Integer l = null;
++if (limitStr != null) {
++l = Integer.parseInt(limitStr);
++}
++Set<String> amounts = new HashSet<String>();
++List<Map<String, Object>> runQuery = storeAdapter.runQuery("Checks");
++for(Map<String, Object> properties : runQuery) {
++if (limitStr == null || (amounts.size() < l.intValue()))
++amounts.add(properties.get("amount").toString());
++}
++return gson.toJson(amounts);
++}
++}
+diff --git a/newsource/Other/._Build.gradle.java b/newsource/Other/._Build.gradle.java
+new file mode 100755
+index 0000000000000000000000000000000000000000..a322a672c1658e237ec8a00e724e436dd91ab339
+GIT binary patch
+literal 4096
+zcmZQz6=P>$Vqox1Ojhs@R)|o50+1L3ClDJkFz{^v(m+1nBL)UWIUt(=a103vvYvJF
+zKST$^9H4T3G%bukK2%&hIX_n~v7jI)RWBs9qQo^XIX@*cFCD0$v?NW}!rIW-#K_Rx
+z(!vDIh*9on2#kinXb6mkz-S1JhQMeDjE2By2#kinXb6mkz-S1dh5)Fu3Bq6?7m|@#
+ztWcC%oL^d$oT`wPUzDwonOBmUSCW~Zmza}NsgRSJR-%xUlbDwc><dG64QUG1|8TF!
+JFv$J?4*=TaD_8&k
+
+literal 0
+HcmV?d00001
+
+diff --git a/newsource/Other/._deploy.sh b/newsource/Other/._deploy.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..a322a672c1658e237ec8a00e724e436dd91ab339
+GIT binary patch
+literal 4096
+zcmZQz6=P>$Vqox1Ojhs@R)|o50+1L3ClDJkFz{^v(m+1nBL)UWIUt(=a103vvYvJF
+zKST$^9H4T3G%bukK2%&hIX_n~v7jI)RWBs9qQo^XIX@*cFCD0$v?NW}!rIW-#K_Rx
+z(!vDIh*9on2#kinXb6mkz-S1JhQMeDjE2By2#kinXb6mkz-S1dh5)Fu3Bq6?7m|@#
+ztWcC%oL^d$oT`wPUzDwonOBmUSCW~Zmza}NsgRSJR-%xUlbDwc><dG64QUG1|8TF!
+JFv$J?4*=TaD_8&k
+
+literal 0
+HcmV?d00001
+
+diff --git a/newsource/Other/._deploy.shh.java b/newsource/Other/._deploy.shh.java
+new file mode 100755
+index 0000000000000000000000000000000000000000..ffab76a5029fd4f8f98cee3bb900a2dd5efe87cf
+GIT binary patch
+literal 4096
+zcmZQz6=P>$Vqox1Ojhs@R)|o50+1L3ClDJkFz{^v(m+1nBL)UWIUpMX1Yitw+A$;~
+z$a>bv{}3GvbAa;vXlfXNe5km1a(=E}VnIPps$NKHMTu)(a(+r?UOG@gX-S%{g|(rv
+ziIJhXrG*Ka5u@DE5Eu=C(GVC7fzc2c4S~@R7!85Z5Eu=C(GVC7fzc2^4FOPR6NJG)
+zE+iwfSfMDjIKQ+gIaMJozbIQFGp{5yuOu@+FEJ;lQXwZbtwbRyCowM@*cXQC8qyT1
+N|KVPdVUYX(9{|@wD`)@!
+
+literal 0
+HcmV?d00001
+
+diff --git a/newsource/Other/._system_test.java b/newsource/Other/._system_test.java
+new file mode 100755
+index 0000000000000000000000000000000000000000..a322a672c1658e237ec8a00e724e436dd91ab339
+GIT binary patch
+literal 4096
+zcmZQz6=P>$Vqox1Ojhs@R)|o50+1L3ClDJkFz{^v(m+1nBL)UWIUt(=a103vvYvJF
+zKST$^9H4T3G%bukK2%&hIX_n~v7jI)RWBs9qQo^XIX@*cFCD0$v?NW}!rIW-#K_Rx
+z(!vDIh*9on2#kinXb6mkz-S1JhQMeDjE2By2#kinXb6mkz-S1dh5)Fu3Bq6?7m|@#
+ztWcC%oL^d$oT`wPUzDwonOBmUSCW~Zmza}NsgRSJR-%xUlbDwc><dG64QUG1|8TF!
+JFv$J?4*=TaD_8&k
+
+literal 0
+HcmV?d00001
+
+diff --git a/newsource/Other/._system_test.jsh.java b/newsource/Other/._system_test.jsh.java
+new file mode 100755
+index 0000000000000000000000000000000000000000..ffab76a5029fd4f8f98cee3bb900a2dd5efe87cf
+GIT binary patch
+literal 4096
+zcmZQz6=P>$Vqox1Ojhs@R)|o50+1L3ClDJkFz{^v(m+1nBL)UWIUpMX1Yitw+A$;~
+z$a>bv{}3GvbAa;vXlfXNe5km1a(=E}VnIPps$NKHMTu)(a(+r?UOG@gX-S%{g|(rv
+ziIJhXrG*Ka5u@DE5Eu=C(GVC7fzc2c4S~@R7!85Z5Eu=C(GVC7fzc2^4FOPR6NJG)
+zE+iwfSfMDjIKQ+gIaMJozbIQFGp{5yuOu@+FEJ;lQXwZbtwbRyCowM@*cXQC8qyT1
+N|KVPdVUYX(9{|@wD`)@!
+
+literal 0
+HcmV?d00001
+
+diff --git a/newsource/Other/AcceptanceTest.java b/newsource/Other/AcceptanceTest.java
+new file mode 100755
+index 0000000..b3fd8aa
+--- /dev/null
++++ b/newsource/Other/AcceptanceTest.java
+@@ -0,0 +1,137 @@
++package edu.luc;
++
++import static org.hamcrest.CoreMatchers.equalTo;
++import static org.hamcrest.CoreMatchers.is;
++import static org.hamcrest.CoreMatchers.nullValue;
++import static org.junit.Assert.assertThat;
++
++import java.util.ArrayList;
++
++import org.junit.Before;
++import org.junit.Test;
++
++import edu.luc.clearing.CheckParser;
++
++public class AcceptanceTest {
++
++private CheckParser parser;
++private String[] array = {"fifty", "five", "55"};
++
++@Before
++public void setUp() {
++parser = new CheckParser();
++}
++
++@Test
++public void returnValueOfComplexString() throws Exception {
++ArrayList<String> inputs = new ArrayList<String>();
++assertThat(convertedString("sixty nine dollars twenty four cents"), is(equalTo(6924)));
++assertThat(convertedString("sixty nine dollars and 28 cents"), is(equalTo(6928)));
++assertThat(convertedString("59 dollars and one cent"), is(equalTo(5901)));
++assertThat(convertedString("59 dollars and 1/100"), is(equalTo(5901)));
++assertThat(convertedString("20 dollar and 5 cent"), is(equalTo(2005)));
++assertThat(convertedString("Four dollars and no cents" ), is(equalTo(400)));
++assertThat(convertedString("fifty five and twelve cents" ), is(equalTo(5512)));
++assertThat(convertedString("Three dollars and 0/100 cents"), is(equalTo(300)));
++assertThat(convertedString("five and no cents"), is(equalTo(500)));
++assertThat(convertedString("one dollars and no cents"), is(equalTo(100)));
++assertThat(convertedString("eighty five and 12 cents"), is(equalTo(8512)));
++assertThat(convertedString("eighty five dollars 12 cents"), is(equalTo(8512)));
++assertThat(convertedString("fifty cent"), is(equalTo(50)));
++assertThat(convertedString("1 dollar and one cent"), is(equalTo(101)));
++assertThat(convertedString("ten cent"), is(equalTo(10)));
++assertThat(convertedString("sixty nine dollars and 69 cents"), is(equalTo(6969)));
++assertThat(convertedString("1 dollar and 1 cent"), is(equalTo(101)));
++assertThat(convertedString("one dollar and zero cents"), is(equalTo(100)));
++assertThat(convertedString("one dollars and one cent"), is(equalTo(101)));
++assertThat(convertedString("6 dollars zero cents"), is(equalTo(600)));
++assertThat(convertedString("91 dollars and 43 cents"), is(equalTo(9143)));
++assertThat(convertedString("one cent"), is(equalTo(1)));
++assertThat(convertedString("SEVEN dollars no cents"), is(equalTo(700)));
++assertThat(convertedString("6 dollars and 0 cents"), is(equalTo(600)));
++assertThat(convertedString("one dollar and 1 cent"), is(equalTo(101)));
++assertThat(convertedString("one dollar and one cents"), is(equalTo(101)));
++assertThat(convertedString("forty five cents"), is(equalTo(45)));
++assertThat(convertedString("one dollars and one cents"), is(equalTo(101)));
++assertThat(convertedString("one dollars and one cent"), is(equalTo(101)));
++assertThat(convertedString("6 dollars"), is(equalTo(600)));
++assertThat(convertedString("twelve dollar and eighty Seven cents"), is(equalTo(1287)));
++assertThat(convertedString("twenty dollar and 5 cent"), is(equalTo(2005)));
++assertThat(convertedString("sixty eight and TWENTY ONE CENTS"), is(equalTo(6821)));
++assertThat(convertedString("one dollar and zero cents"), is(equalTo(100)));
++assertThat(convertedString("50 six and 12/100"), is(equalTo(5612)));
++assertThat(convertedString("1 dollars and one cents"), is(equalTo(101)));
++assertThat(convertedString("Two dollars and twenty one cents"), is(equalTo(221)));
++assertThat(convertedString("50 dollars and 11 cents"), is(equalTo(5011)));
++assertThat(convertedString("FIVE DOLLARS AND TWELVE CENTS"), is(equalTo(512)));
++assertThat(convertedString("fifty nine dollars and 1 cent"), is(equalTo(5901)));
++assertThat(convertedString("ten cents"), is(equalTo(10)));
++assertThat(convertedString("6 dollars and 65/100"), is(equalTo(665)));
++assertThat(convertedString("Ninety-nine and 99/100"), is(equalTo(9999)));
++assertThat(convertedString("Fifty-four and 130/100"), is(equalTo(5530)));
++assertThat(convertedString("Thirty and 0/100"), is(equalTo(3000)));
++assertThat(convertedString("Zero and 100/100"), is(equalTo(100)));
++assertThat(convertedString("Zero and zero cents"), is(equalTo(0)));
++assertThat(convertedString("Six"), is(equalTo(600)));
++assertThat(convertedString("Sixty five"), is(equalTo(6500)));
++assertThat(convertedString("Sixty-four"), is(equalTo(6400)));
++assertThat(convertedString("64/100"), is(equalTo(64)));
++assertThat(convertedString("$60 four + 32 cents"), is(equalTo(6432)));
++assertThat(convertedString("twenty-four + 32/100"), is(equalTo(2432)));
++assertThat(convertedString("22 + 46/100"), is(equalTo(2246)));
++assertThat(convertedString("$45 ~ 46/100"), is(equalTo(4546)));
++assertThat(convertedString("80 two , 46/100 cents"), is(equalTo(8246)));
++assertThat(convertedString("sixty-eight dollars --- 4/100 cents"), is(equalTo(6804)));
++assertThat(convertedString("$forty 5 ~ 16 cents"), is(equalTo(4516)));
++assertThat(convertedString("25 -- 47/100"), is(equalTo(2547)));
++assertThat(convertedString("80 two , 46/100 cents"), is(equalTo(8246)));
++assertThat(convertedString("eighty-9, 46/100 cents"), is(equalTo(8946)));
++assertThat(convertedString("eighty eight and twenty-two cents"), is(equalTo(8822)));
++
++
++}
++
++@Test
++public void returnNullForMalformedString() throws Exception {
++assertThat(convertedString("purple"), is(nullValue()));
++assertThat(convertedString("purple dollars"), is(nullValue()));
++assertThat(convertedString("purple dollars and blue cents"), is(nullValue()));
++assertThat(convertedString("6 dollars and blue cents"), is(nullValue()));
++assertThat(convertedString("purple dollars and 6 cents"), is(nullValue()));
++}
++
++@Test
++public void createArrayFromStringComponents() throws Exception {
++assertThat(createdArray("Nine and 99/100").length, is(equalTo(2)));
++assertThat(createdArray("Twenty-two and 10/100")[0], is(equalTo("twenty two")));
++assertThat(createdArray("Fifty-one and 9/100")[1], is(equalTo("9")));
++assertThat(createdArray("Ninety and 0/100")[1], is(equalTo("0")));
++}
++
++@Test
++public void convertArrayOfStringsToArrayOfIntegers() throws Exception {
++assertThat(convertedArray(array).size(), is(equalTo(3)));
++assertThat(convertedArray(array).get(0), is(equalTo(50)));
++assertThat(convertedArray(array).get(1), is(equalTo(5)));
++assertThat(convertedArray(array).get(2), is(equalTo(55)));
++}
++
++private Integer convertedString(String checkString) {
++return parser.processCheckString(checkString);
++}
++
++private Integer parsedAmountOf(ArrayList<Integer> amounts) {
++return parser.parseAmount(amounts).intValue();
++}
++
++private String[] createdArray(String input) {
++return parser.processString(input);
++}
++
++private ArrayList<Integer> convertedArray(String[] input) {
++return parser.stringArrToIntegerArr(input);
++}
++
++}
++
++
+diff --git a/newsource/Other/deploy.sh b/newsource/Other/deploy.sh
+new file mode 100755
+index 0000000..96e3e5a
+--- /dev/null
++++ b/newsource/Other/deploy.sh
+@@ -0,0 +1,88 @@
++#!/bin/bash
++
++function cleanup {
++  kill $server_pid
++  rm gradle.properties
++  exit 0
++}
++
++trap "cleanup" INT TERM EXIT
++
++function unknown_files {
++  unknown_file_count=`git status --porcelain | grep "^??" | wc -l`
++  [[ "$unknown_file_count" -gt 0 ]]
++}
++
++function uncommitted_changes {
++  count=`git diff HEAD --shortstat | wc -l`
++  [[ "$count" -gt 0 ]]
++}
++
++if unknown_files; then
++echo "Unknown files in project!"
++  exit 1
++fi
++
++if uncommitted_changes; then
++echo "Uncommitted files in project!"
++  exit 1
++fi
++
++gradle clean build
++if [ "$?" -gt 0 ]; then
++exit 1
++fi
++
++gradle gaeRun &
++server_pid=$!
++if [ "$?" -gt 0 ]; then
++  #add count to while loop for optional timeout
++  echo "Server fialed to start"
++  exit 1
++fi
++
++server_status=1
++echo -n "Waiting for local server to start..."
++while [ $server_status -gt 0 ]; do
++echo -n
++  curl http://localhost:8085
++  server_status=$?
++  sleep 1
++done
++
++history=`curl http://dgladecs370.appspot.com/checkclearing`
++response=`curl -s -H Content-Type:application/json -d "$history" http://localhost:8085/checkclearing`
++
++echo $response | python -mjson.tool > /dev/null
++if [ "$?" -eq 0 ]; then
++echo "Response is valid JSON"
++else
++echo "Response is NOT valid JSON"
++  echo $response
++  exit 1
++fi
++
++kill $server_pid
++wait $server_pid
++
++echo "Build successful! Enter AppEngine password to deploy"
++stty -echo
++read -p "Password: " password
++echo
++stty echo
++
++echo "gaePassword=$password" > gradle.properties
++gradle gaeUpload
++rm gradle.properties
++
++timestamp=`date "+%Y-%m-%d_%H_%M_%S"`
++echo $timestamp
++git tag DEPLOY_$timestamp
++
++echo "Exiting..."
++exit 0
++
++
++
++
++
+diff --git a/newsource/Other/deploy.shh.java b/newsource/Other/deploy.shh.java
+new file mode 100755
+index 0000000..6f114cf
+--- /dev/null
++++ b/newsource/Other/deploy.shh.java
+@@ -0,0 +1,19 @@
++#!/bin/bash
++
++server=${1-localhost:8085} #take the first parameter
++
++echo "Exiting..."
++exit 0
++ 
++curl -s -H Content-Type:application/json -d '["one"]' http://$server/checkclearing
++
++history=`curl http://$server/checkclearing`
++response=`curl -s -H Content-Type:application/json -d "$history" http://$server/checkclearing`
++
++if [ "$response" != '{"one":100}' ]; then
++echo $response
++echo "TEST FAILED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
++exit 1
++else
++echo "Test succeeded"
++fi
+\ No newline at end of file
+diff --git a/newsource/Other/system 1 b/newsource/Other/system 1
+new file mode 100755
+index 0000000..003d581
+--- /dev/null
++++ b/newsource/Other/system 1	
+@@ -0,0 +1,20 @@
++#!/bin/bash
++
++server=${1-localhost:8085} #take the first parameter
++ 
++curl -s -H Content-Type:application/json -d '["one"]' http://$server/checkclearing
++
++history=`curl http://$server/checkclearing`
++response=`curl -s -H Content-Type:application/json -d "$history" http://$server/checkclearing`
++
++if [ "$response" != '{"one":100}' ]; then
++echo $response
++echo "TEST FAILED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
++exit 1
++else
++echo "Test succeeded"
++fi
++
++
++
++curl -s -H Content-Type:application/json -d '["forty purple dollars and 23 cents"]' http://localhost:8085/checkclearing
+\ No newline at end of file
+diff --git a/newsource/Other/system_test b/newsource/Other/system_test
+new file mode 100755
+index 0000000..700058c
+--- /dev/null
++++ b/newsource/Other/system_test
+@@ -0,0 +1,20 @@
++#!/bin/bash
++
++server=${1-localhost:8085} #take the first parameter
++ 
++curl -s -H Content-Type:application/json -d '["one"]' http://$server/checkclearing
++
++history=`curl http://$server/checkclearing`
++response=`curl -s -H Content-Type:application/json -d "$history" http://$server/checkclearing`
++
++if [ "$response" != '{"one":100}' ]; then
++echo $response
++echo "TEST FAILED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
++exit 1
++else
++echo "Test succeeded"
++fi
++
++
++
++curl -s -H Content-Type:application/json -d '["forty purple dollars and 23 cents"]' http://localhost:8085/checkclearing
+diff --git a/newsource/Other/system_test.java b/newsource/Other/system_test.java
+new file mode 100755
+index 0000000..700058c
+--- /dev/null
++++ b/newsource/Other/system_test.java
+@@ -0,0 +1,20 @@
++#!/bin/bash
++
++server=${1-localhost:8085} #take the first parameter
++ 
++curl -s -H Content-Type:application/json -d '["one"]' http://$server/checkclearing
++
++history=`curl http://$server/checkclearing`
++response=`curl -s -H Content-Type:application/json -d "$history" http://$server/checkclearing`
++
++if [ "$response" != '{"one":100}' ]; then
++echo $response
++echo "TEST FAILED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
++exit 1
++else
++echo "Test succeeded"
++fi
++
++
++
++curl -s -H Content-Type:application/json -d '["forty purple dollars and 23 cents"]' http://localhost:8085/checkclearing
+diff --git a/newsource/Other/system_test.jsh.java b/newsource/Other/system_test.jsh.java
+new file mode 100755
+index 0000000..9978356
+--- /dev/null
++++ b/newsource/Other/system_test.jsh.java
+@@ -0,0 +1,16 @@
++#!/bin/bash
++
++server=${1-localhost:8085} #take the first parameter
++ 
++curl -s -H Content-Type:application/json -d '["one"]' http://$server/checkclearing
++
++history=`curl http://$server/checkclearing`
++response=`curl -s -H Content-Type:application/json -d "$history" http://$server/checkclearing`
++
++if [ "$response" != '{"one":100}' ]; then
++echo $response
++echo "TEST FAILED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
++exit 1
++else
++echo "Test succeeded"
++fi
+\ No newline at end of file
+diff --git a/newsource/Test/CheckClearingServletTest b/newsource/Test/CheckClearingServletTest
+new file mode 100755
+index 0000000..a206a3f
+--- /dev/null
++++ b/newsource/Test/CheckClearingServletTest
+@@ -0,0 +1,68 @@
++package edu.luc.clearing;
++
++import static org.mockito.Mockito.*;
++import static org.hamcrest.CoreMatchers.*;
++
++import java.io.BufferedReader;
++import java.io.CharArrayWriter;
++import java.io.IOException;
++import java.io.PrintWriter;
++import java.io.StringReader;
++
++import javax.servlet.http.HttpServletRequest;
++import javax.servlet.http.HttpServletResponse;
++
++import org.junit.Assert;
++import org.junit.Before;
++import org.junit.Test;
++import org.mockito.Mockito;
++
++
++public class CheckClearingServletTest {
++
++private CheckClearingServlet servlet;
++HttpServletResponse mockResponse;
++HttpServletRequest mockRequest;
++CharArrayWriter writer;
++
++@Before
++public void setUp() throws IOException {
++DataStoreAdapter datastore = Mockito.mock(DataStoreAdapter.class);
++servlet = new CheckClearingServlet(datastore);
++mockResponse = mock(HttpServletResponse.class);
++mockRequest = mock(HttpServletRequest.class);
++
++BufferedReader reader = new BufferedReader(new StringReader("[]"));
++writer = new CharArrayWriter();
++
++when(mockRequest.getReader()).thenReturn(reader);
++when(mockResponse.getWriter()).thenReturn(new PrintWriter(writer));
++}
++
++@Test
++public void setsContentTypeForTheResponse() throws Exception {
++servlet.doPost(mockRequest, mockResponse);
++verify(mockResponse).setContentType("application/json");
++}
++
++@Test
++public void writesAResponseObject() throws Exception {
++servlet.doPost(mockRequest, mockResponse);
++Assert.assertThat(writer.toString(), is(equalTo("{}")));
++}
++
++@Test
++public void returnsCheckAmountsInAJSONArray() throws Exception {
++servlet.doGet(mockRequest, mockResponse);
++Assert.assertThat(writer.toString(), is(equalTo("[]")));
++}
++
++@Test
++public void canLimitTheNumberOfCheckAmountsReturned() throws Exception {
++when(mockRequest.getParameter("limit")).thenReturn("1000");
++servlet.doGet(mockRequest, mockResponse);
++verify(mockRequest).getParameter("limit");
++}
++}
++
++
+diff --git a/newsource/Test/CheckHistoryTest.java b/newsource/Test/CheckHistoryTest.java
+new file mode 100755
+index 0000000..8e68d00
+--- /dev/null
++++ b/newsource/Test/CheckHistoryTest.java
+@@ -0,0 +1,58 @@
++package edu.luc.clearing;
++
++import static org.junit.Assert.assertEquals;
++
++import java.util.ArrayList;
++import java.util.HashMap;
++import java.util.Map;
++
++import org.junit.Before;
++import org.junit.Test;
++import org.mockito.Mockito;
++
++public class CheckHistoryTest {
++
++private CheckHistory history;
++private DataStoreAdapter mockDataStore;
++private Map<String, Object> check;
++private ArrayList<Map<String, Object>> checks;
++
++@Before
++public void setUp() {
++mockDataStore = Mockito.mock(DataStoreAdapter.class);
++history = new CheckHistory(mockDataStore);
++check = new HashMap<String, Object>();
++checks = new ArrayList<Map<String, Object>>();
++Mockito.when(mockDataStore.runQuery("Checks")).thenReturn(checks);
++}
++
++@Test
++public void getRequestReturnsAllThePreviouslyEncounteredCheckAmounts() throws Exception {
++check.put("amount", "one");
++checks.add(check);
++Mockito.when(mockDataStore.runQuery("Checks")).thenReturn(checks);
++assertEquals("[\"one\"]", history.getAmounts(null));
++}
++
++@Test
++public void doesNotLimitQueryIfNullIsPassedIn() throws Exception {
++check.put("amount", "one");
++checks.add(check);
++assertEquals("[\"one\"]", history.getAmounts(null));
++}
++@Test
++public void canLimitNumberOfChecksReturned() throws Exception {
++checks.add(createCheck("amount", "one"));
++checks.add(createCheck("amount", "two"));
++checks.add(createCheck("amount", "three"));
++assertEquals("[\"two\",\"one\"]", history.getAmounts("2"));
++}
++
++public Map<String, Object> createCheck(String amount, Object number) {
++Map<String, Object> check = new HashMap<String, Object>();
++check.put(amount, number);
++return check;
++}
++
++
++}
+diff --git a/newsource/Test/CheckParserTest.java b/newsource/Test/CheckParserTest.java
+new file mode 100755
+index 0000000..7fa2be8
+--- /dev/null
++++ b/newsource/Test/CheckParserTest.java
+@@ -0,0 +1,34 @@
++package edu.luc.clearing;
++
++import static org.junit.Assert.assertEquals;
++
++import org.junit.Before;
++import org.junit.Test;
++
++public class CheckParserTest {
++
++private CheckParser parser;
++
++@Before
++public void setUp() {
++parser = new CheckParser();
++}
++
++@Test
++public void shouldIgnoreCase() throws Exception {
++
++assertEquals(300, parser.processCheckString("Three dollars").intValue());
++}
++
++@Test
++public void shouldHandleZero() throws Exception {
++assertEquals(0, parser.processCheckString("zero dollars").intValue());
++}
++
++@Test
++public void shouldHandleCompoundNumbers() throws Exception {
++assertEquals(3300, parser.processCheckString("THIRTY-THREE AND 0/100 CENTS").intValue());
++}
++}
++
++
+diff --git a/newsource/Test/DataStoreAdapterTest.java b/newsource/Test/DataStoreAdapterTest.java
+new file mode 100755
+index 0000000..8b2bb78
+--- /dev/null
++++ b/newsource/Test/DataStoreAdapterTest.java
+@@ -0,0 +1,20 @@
++package edu.luc.clearing;
++
++import org.junit.Test;
++import org.mockito.Mockito;
++
++import com.google.appengine.api.datastore.DatastoreService;
++import com.google.appengine.api.datastore.Entity;
++
++public class DataStoreAdapterTest {
++
++@Test(expected=NullPointerException.class)
++public void canSaveAmounts() {
++DatastoreService googleStore = Mockito.mock(DatastoreService.class);
++DataStoreAdapter store = new DataStoreAdapter(googleStore);
++store.saveRow("Amount", "one");
++Mockito.verify(googleStore).put((Entity) Mockito.anyObject());
++}
++}
++
++
+diff --git a/newsource/Test/RequestReaderTest.java b/newsource/Test/RequestReaderTest.java
+new file mode 100755
+index 0000000..a5ad0c1
+--- /dev/null
++++ b/newsource/Test/RequestReaderTest.java
+@@ -0,0 +1,69 @@
++package edu.luc.clearing;
++
++import static org.junit.Assert.*;
++import static org.mockito.Mockito.*;
++
++import java.io.StringReader;
++
++import org.junit.Before;
++import org.junit.Test;
++import org.mockito.Mockito;
++
++public class RequestReaderTest {
++
++private RequestReader reader;
++private DataStoreAdapter dataStore;
++private Clock clock;
++
++@Before
++public void setUp() {
++dataStore = Mockito.mock(DataStoreAdapter.class);
++clock = Mockito.mock(Clock.class);
++reader = new RequestReader(dataStore, clock);
++}
++    @Test
++    public void shouldReturnAnEmptyObjectForAnEmptyRequest() throws Exception {
++        assertEquals("{}", reader.respond(new StringReader("[]")));
++    }
++    
++@Test
++public void shouldReturnCentsForCheckValues() throws Exception {
++        assertEquals("{\"one dollar\":100}", reader.respond(new StringReader("[\"one dollar\"]")));
++        assertEquals("{\"seven dollars 10 cents\":710}", reader.respond(new StringReader("[\"seven dollars 10 cents\"]")));
++        assertEquals("{\"seventy seven dollars thirty cents\":7730}", reader.respond(new StringReader("[\"seventy seven dollars thirty cents\"]")));
++        assertEquals("{\"94 dollars six cents\":9406}", reader.respond(new StringReader("[\"94 dollars six cents\"]")));
++        assertEquals("{\"forty 4 dollars six cents\":4406}", reader.respond(new StringReader("[\"forty 4 dollars six cents\"]")));
++        assertEquals("{\"twenty-two dollars\":2200}", reader.respond(new StringReader("[\"twenty-two dollars\"]")));
++        assertEquals("{\"thirty-seven and 27/100\":3727}", reader.respond(new StringReader("[\"thirty-seven and 27/100\"]")));
++        assertEquals("{\"thirty-seven dollars and 27/100\":3727}", reader.respond(new StringReader("[\"thirty-seven dollars and 27/100\"]")));
++        assertEquals("{\"one dollar and 100/100\":200}", reader.respond(new StringReader("[\"one dollar and 100/100\"]")));
++}
++
++
++@Test
++public void shouldIgnoreMalformedAmounts() throws Exception {
++assertEquals("{}", reader.respond(new StringReader("[\"purple\"]")));
++assertEquals("{}", reader.respond(new StringReader("[\"purple-two\"]")));
++assertEquals("{}", reader.respond(new StringReader("[\"purple-twenty-two\"]")));
++assertEquals("{}", reader.respond(new StringReader("[\"7/10\"]")));
++assertEquals("{}", reader.respond(new StringReader("[\"a/100\"]")));
++assertEquals("{}", reader.respond(new StringReader("[\"Eighty and 9a/10\"]")));
++assertEquals("{}", reader.respond(new StringReader("[\"Eighty and 9/10\"]")));
++}
++
++@Test
++public void shouldSaveAmountsInDataStore() throws Exception {
++reader.respond(new StringReader("[\"one\"]"));
++Mockito.verify(dataStore).saveRow("amount", "one");
++}
++
++@Test
++public void shouldShortCircuitTheResponseIfItTakeslongerThan25Seconds() throws Exception {
++long now = System.currentTimeMillis();
++when(clock.currentTime()).thenReturn(now, now + 23 * 1000, now + 26 * 1000);
++        String response = reader.respond(new StringReader("[\"one\", \"two\", \"three\"]"));
++        assertEquals("{\"two\":200,\"one\":100}", response);
++}
++}
++
++
+-- 
+1.7.5.1
+
