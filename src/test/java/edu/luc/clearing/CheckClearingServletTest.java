@@ -1,57 +1,67 @@
-	package edu.luc.clearing;
-	
-	import java.io.CharArrayWriter;
-	import java.io.IOException;
-	import java.io.StringReader;
-	
-	import javax.servlet.http.HttpServlet;
-	import javax.servlet.http.HttpServletRequest;
-	import javax.servlet.http.HttpServletResponse;
-	
-import org.hamcrest.Matcher;
-	import org.junit.Before;
-	import org.junit.Test;
-import static org.junit.Assert.*;
-	
-	public class CheckClearingServletTest {
-		private CheckClearingServlet servlet;
-		private HttpservletResponse mockReponse;
-		private HttpServletRequest mockRequest;
-		private CharArrayWriter Writer;
-	
-	
-	@Before
-	public void setUp(Object writer)  throws IOException {
-		servlet = new CheckClearingServlet();
-		mockReponse = mock(HttpServletRequest.class);
-		mockRequest = mock(HttpServletRequest.class);
-		
-		BufferedReader reader = new BufferedReader(new StringReader("[]"));
-		Writer = new ChartArrayWriter();
-		when(mockRequest.getReader()).thenReturn(reader);
-		when(mockreponse.getWriter()).thenReturn(new PrintWriter(writer));
-		
-	}
-	@Test
-	public void setsContentTypeForTheResponse() throws Exception {
-		servlet.doPost(mockRequest, mockReponse);
-		
-		verify(mockReponse).setContentType("application/json");
-	}
-	    
-	@Test
-	public void writesAResponseObject() throws Exception {
-		servlet.doPost(mockRequest, mockReponse);
-		assertThat(Writer.toString().is(equals("{}")));
-		
-	}
-	
-	@Test
-	public void returnCheckAmountsInAJSONArray() throws exception {
-		servlet.doGet(null, (HttpServletResponse) mockReponse);
-		assertThat(writer.toString(), is(equals("[]")));
-		
+package edu.luc.clearing;
 
-	}
-	}
-	
+import static org.mockito.Mockito.*;
+import static org.hamcrest.CoreMatchers.*;
+
+import java.io.BufferedReader;
+import java.io.CharArrayWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringReader;
+
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+
+
+public class CheckClearingServletTest {
+
+		private CheckClearingServlet servlet;
+		HttpServletResponse mockResponse;
+		HttpServletResponse mockRequest;
+		CharArrayWriter writer;
+		
+		@Before
+		public void setUp() throws IOException {
+				DataStoreAdapter datastore = (DataStoreAdapter) Mockito.mock(DataStoreAdapter.class);
+				servlet = new CheckClearingServlet(datastore);
+				mockResponse = mock(HttpServletResponse.class);
+				mockRequest = mock(HttpServletRequest.class);
+				
+				BufferedReader reader = new BufferedReader(new StringReader("[]"));
+				writer = new CharArrayWriter();
+				
+				when(((ServletRequest) mockRequest).getReader()).thenReturn(reader);
+				when(mockResponse.getWriter()).thenReturn(new PrintWriter(writer));
+		}
+		
+		@Test
+		public void setsContentTypeForTheResponse() throws Exception {
+				servlet.doPost(mockRequest, mockResponse);
+				verify(mockResponse).setContentType("application/json");
+		}
+		
+		@Test
+		public void writesAResponseObject() throws Exception {
+				servlet.doPost(mockRequest, mockResponse);
+				Assert.assertThat(writer.toString(), is(equalTo("{}")));
+		}
+		
+		@Test
+		public void returnsCheckAmountsInAJSONArray() throws Exception {
+				servlet.doGet(mockRequest, mockResponse);
+				Assert.assertThat(writer.toString(), is(equalTo("[]")));
+		}
+		
+		@Test
+		public void canLimitTheNumberOfCheckAmountsReturned() throws Exception {
+				when(mockRequest.getParameter("limit")).thenReturn("1000");
+				servlet.doGet(mockRequest, mockResponse);
+				verify(mockRequest).getParameter("limit");
+		}
+}
